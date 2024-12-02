@@ -8,12 +8,20 @@ services:
     #   - "3306:3306"
     env_file: .env
     volumes:
+      #per essere chiari con la sintassi dei volumi
+      # - <volume_name>:<container_path>
+      # the name of the volume is saved for future use on the host
       - mariadb_data:/var/lib/mysql
     networks:
       - my_network
     expose:
       - "3306"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   nginx:
     container_name: nginx
@@ -22,10 +30,10 @@ services:
       context: ./requirements/nginx
     ports:
       - "443:443"
-    volumes:
-      - ./requirements/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
-      - ./requirements/nginx/tools:/etc/nginx/tools
-      - ./requirements/wordpress:/var/www/wordpress
+    # volumes:
+    #   - ./requirements/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+    #   - ./requirements/nginx/tools:/etc/nginx/tools
+    #   - ./requirements/wordpress:/var/www/wordpress
     depends_on:
       - wordpress
     networks:
@@ -38,28 +46,32 @@ services:
       context: ./requirements/wordpress
     # ports:
     #   - "9000:9000"
-    # volumes:
-    #   - ./requirements/wordpress:/var/www/wprdpress
+    volumes:
+      - wordpress:/var/www/wordpress
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     networks:
       - my_network
     env_file: .env
     expose:
       - "9000"
+    restart: on-failure
+
+#volumes management section
 volumes:
   wordpress:
     driver: local
     driver_opts:
       type: none
-      device: '/Users/login/data/wordpress'
+      device: './requirements/wordpress/wordpress_data'
       o: bind
   mariadb_data:
     driver: local
     driver_opts:
       type: 'none'
+      device: './requirements/mariadb/mariadb_data'
       o: 'bind'
-      device: '/Users/login/data/mariadb'
 networks:
   my_network:
     driver: bridge
