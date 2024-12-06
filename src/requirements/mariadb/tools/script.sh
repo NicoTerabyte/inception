@@ -1,33 +1,34 @@
 #!/bin/bash
+sleep 2
 
-echo "Starting MariaDB initialization script"
+#start mariadbd-safe in the background
+mariadbd-safe &
 
-# Ensure necessary directories exist
-mkdir -p /run/mysqld
-chown -R mysql:mysql /run/mysqld
+sleep 10
+# Create the table
+echo "Create the table"
+mariadb -u root -p"${MARIA_ROOT_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${MARIA_DB_NAME}\`;"
 
-# Start MariaDB directly in safe mode in the background
-mysqld_safe --datadir=/var/lib/mysql &
-echo "Waiting for MariaDB to start..."
-until mysqladmin ping --silent; do
-    sleep 1
-done
-echo "MariaDB is running."
+# Create the user
+echo "Create the user"
+mariadb -u root -p"${MARIA_ROOT_PASSWORD}" -e "CREATE USER IF NOT EXISTS \`${MARIA_USER}\`@'localhost' IDENTIFIED BY '${MARIA_PASSWORD}';"
 
-# Set default values for environment variables if not provided
-SQL_DATABASE=${SQL_DATABASE:-testdb}
-SQL_USER=${SQL_USER:-testuser}
-SQL_PASSWORD=${SQL_PASSWORD:-testpassword}
-SQL_ROOT_PASSWORD=${SQL_ROOT_PASSWORD:-rootpassword}
+# Grant privileges to the user
+echo "Grant privileges to the user"
+mariadb -u root -p"${MARIA_ROOT_PASSWORD}" -e "GRANT ALL PRIVILEGES ON \`${MARIA_DB_NAME}\`.* TO \`${MARIA_USER}\`@'%' IDENTIFIED BY '${MARIA_PASSWORD}';"
 
-# Initialize database
-echo "Initializing database..."
-mysql -e "CREATE DATABASE IF NOT EXISTS \`${SQL_DATABASE}\`;"
-mysql -e "GRANT ALL PRIVILEGES ON \`${SQL_DATABASE}\`.* TO \`${SQL_USER}\`@'%' IDENTIFIED BY '${SQL_PASSWORD}';"
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${SQL_ROOT_PASSWORD}';"
-mysql -e "FLUSH PRIVILEGES;"
+#change the root password to the one set in the environment
+# echo "Change the root password"
+# mariadb -u root -p"${MARIA_ROOT_PASSWORD}" -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MARIA_ROOT_PASSWORD}';"
 
-echo "MariaDB initialization complete."
+#flush privileges to apply changes to all users
+echo "Flush privileges"
+mariadb -u root -p${MARIA_ROOT_PASSWORD} -e "FLUSH PRIVILEGES;"
 
-# Keep MariaDB running in the foreground
-wait
+#shutdown the server
+echo "Shutdown the server"
+mariadb-admin -u root -p"${MARIA_ROOT_PASSWORD}" shutdown
+
+#start the server in safe mode
+echo "Start the server in safe mode"
+exec mariadbd-safe

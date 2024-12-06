@@ -4,13 +4,8 @@ services:
     build:
       context: ./requirements/mariadb
       dockerfile: Dockerfile  # Ensure the file exists at this location
-    # ports:
-    #   - "3306:3306"
     env_file: .env
     volumes:
-      #per essere chiari con la sintassi dei volumi
-      # - <volume_name>:<container_path>
-      # the name of the volume is saved for future use on the host
       - mariadb_data:/var/lib/mysql
     networks:
       - my_network
@@ -30,10 +25,8 @@ services:
       context: ./requirements/nginx
     ports:
       - "443:443"
-    # volumes:
-    #   - ./requirements/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
-    #   - ./requirements/nginx/tools:/etc/nginx/tools
-    #   - ./requirements/wordpress:/var/www/wordpress
+    volumes:
+      - wordpress:/var/www/wordpress
     depends_on:
       - wordpress
     networks:
@@ -44,13 +37,10 @@ services:
     container_name: wordpress
     build:
       context: ./requirements/wordpress
-    # ports:
-    #   - "9000:9000"
     volumes:
       - wordpress:/var/www/wordpress
     depends_on:
-      mariadb:
-        condition: service_healthy
+      - mariadb
     networks:
       - my_network
     env_file: .env
@@ -64,13 +54,13 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: './requirements/wordpress/wordpress_data'
+      device: '/home/lnicoter/data/wordpress'
       o: bind
   mariadb_data:
     driver: local
     driver_opts:
       type: 'none'
-      device: './requirements/mariadb/mariadb_data'
+      device: '/home/lnicoter/data/mariadb'
       o: 'bind'
 networks:
   my_network:
