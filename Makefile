@@ -1,4 +1,8 @@
-all : up
+# .PHONY: setup
+
+all: up
+
+# Add other targets as needed
 
 up :
 	@sudo docker compose -f ./src/docker-compose.yml up --build
