@@ -16,10 +16,10 @@ setup:
 	@cd src && echo "WORDPRESS_DB_HOST=mariadb:3306" >> generate_env.sh
 	@cd src && echo "WORDPRESS_DB_USER=npc" >> generate_env.sh
 	@cd src && echo "read -p \"user password: \" USER_PASSWORD" >> generate_env.sh
-	@cd src && echo "WORDPRESS_DB_NAME=wordpress" >> generate_env.sh
-	@cd src && echo "TITLE=utente" >> generate_env.sh
-	@cd src && echo "ADMIN_USER=lnicoter" >> generate_env.sh
-	@cd src && echo "ADMIN_PASSWORD=heya" >> generate_env.sh
+	@cd src && echo "read -p \"wordpress db name: \" WORDPRESS_DB_NAME" >> generate_env.sh
+	@cd src && echo "read -p \"title: \" TITLE" >> generate_env.sh
+	@cd src && echo "read -p \"admin user: \" ADMIN_USER" >> generate_env.sh
+	@cd src && echo "read -p \"admin password: \" ADMIN_PASSWORD" >> generate_env.sh
 	@cd src && echo "ADMIN_EMAIL=lnicoter@gmail.com" >> generate_env.sh
 	@cd src && echo "" >> generate_env.sh
 	@cd src && echo "cat <<EOL > .env" >> generate_env.sh
